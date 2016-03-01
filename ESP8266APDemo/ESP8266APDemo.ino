@@ -5,6 +5,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
+#include <String>
 
 // WiFi SSID and credentials.
 const char *ssid = "EnterTheESP";
@@ -17,7 +18,7 @@ unsigned long responses_sent = 0;
 
 void handleRoot(){
   responses_sent++;
-  server.send(200, "text/html", "Congratulations! You are the " + string(responses_sent) +
+  server.send(200, "text/html", "Congratulations! You are the " + String(responses_sent) +
                                 "user!");
 }
 
