@@ -18,8 +18,7 @@ unsigned long responses_sent = 0;
 
 void handleRoot(){
   responses_sent++;
-  server.send(200, "text/html", "Congratulations! You are the " + String(responses_sent) +
-                                "user!");
+  server.send(200, "text/html", "You are user number " + String(responses_sent));
 }
 
 void setup() {
