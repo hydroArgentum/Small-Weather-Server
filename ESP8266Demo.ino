@@ -22,8 +22,8 @@
 // WPA2-Enterprise + EAP-TLS should be supported, but WPA2-Enterprise + PEAP.
 // There might be a workaround for authentication based on eduroam.
 // We probably won't use eduroam just to do it though.
-const char* ssid = "";
-const char* password = "";
+const char* ssid = "esp8266demo";
+const char* password = "rcos";
 
 // BME280 module.
 Adafruit_BME280 bme280(BME280_CS);
