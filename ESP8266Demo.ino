@@ -1,10 +1,14 @@
 /****************
  * ESP8266 Demo *
  ****************/
-
 // Libraries included.
+// ESP8266 WiFi and Web Server.
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+// BME280 library and dependencies.
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+#include <SPI.h>
 
 // Defined constants.
 // These are chip select pins that could be mapped to any available GPIO.
@@ -21,6 +25,9 @@
 const char* ssid = "";
 const char* password = "";
 
+// BME280 module.
+Adafruit_BME280 bme280(BME280_CS);
+
 /************************************************************************************************
  * Begin UART communication.                                                                    *
  * Note that it is not possible to determine whether a connection has been successfuly bridged. *
@@ -35,12 +42,18 @@ void serial_setup(){
 void BME280_setup(){
   // Setup BME280 module with default pins.
   // Default SPI pins.
-  
+  if (!bme280.begin()){
+    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    while(1);
+  }
+  Serial.println("BME280 connection complete!");
 }
 
 void setup() {
   // Start UART communication.
   serial_setup();
+  // Setup BME280.
+  BME280_setup();
 }
 
 void loop() {
