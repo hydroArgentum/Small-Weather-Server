@@ -2,8 +2,7 @@
  * ESP8266 Demo *
  ****************/
 // Libraries included.
-// Arduino base WiFi library.
-#include <WiFi.h>
+// Arduino base WiFi 
 // ESP8266 WiFi and Web Server.
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
@@ -23,11 +22,15 @@
 // WPA2-Enterprise + EAP-TLS should be supported, but WPA2-Enterprise + PEAP.
 // There might be a workaround for authentication based on eduroam.
 // We probably won't use eduroam just to do it though.
-#define WIFI_SSID "esp8266demo"
-#define WIFI_KEY "opensource"
+const char* ssid = "esp8266demo";
+const char* key = "opensource";
 
+// Global variables.
 // BME280 module.
 Adafruit_BME280 bme280(BME280_CS);
+// WiFi Server.
+// Specify the port of the server using the argument.
+ESP8266WebServer server(80);
 
 /************************************************************************************************
  * Begin UART communication.                                                                    *
@@ -52,9 +55,12 @@ void BME280_setup(){
 
 void WiFi_setup(){
   // Setup WIFI.
-  WiFi.begin(WIFI_SSID, WIFI_KEY);
+  WiFi.begin(ssid, key);
   // Wait for connection.
-  while (WiFi.status() != WL_CONNTECTED){
+  while (WiFi.status() != WL_CONNECTED){
+    // Note, the ESP8266 cannot connect while Serial is busy, so we have
+    // to create a delay so that it has time to connect.
+    delay(500);
     Serial.print(".");
   }
   // Connection completed.
@@ -74,6 +80,21 @@ void WiFi_diagnostics(){
   Serial.println(WiFi.gatewayIP());
 }
 
+void serverHandler(){
+  // Controls the server response to a request.
+  Serial.println("Client request handled!");
+  server.send(200, "text/plain", "You are connected.");
+}
+
+void WiFi_handler(){
+  // Controls URI.
+  server.onNotFound(serverHandler);
+
+  // Start server.
+  server.begin();
+  Serial.println("Server ready!");
+}
+
 void setup() {
   // Start UART communication.
   serial_setup();
@@ -83,9 +104,11 @@ void setup() {
   WiFi_setup();
   // Check WiFi.
   WiFi_diagnostics();
+  // Start server.
+  WiFi_handler();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  server.handleClient();
 }
+
