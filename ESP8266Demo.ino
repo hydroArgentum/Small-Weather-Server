@@ -28,9 +28,17 @@ const char* key = "opensource";
 // Global variables.
 // BME280 module.
 Adafruit_BME280 bme280(BME280_CS);
+// Data.
+float temperature = 0;
+float pressure = 0;
+float humidity = 0;
 // WiFi Server.
 // Specify the port of the server using the argument.
 ESP8266WebServer server(80);
+// Set/Reset.
+unsigned char sr_var = 1;
+// Number of clients served.
+unsigned long clients_served = 0;
 
 /************************************************************************************************
  * Begin UART communication.                                                                    *
@@ -56,6 +64,7 @@ void BME280_setup(){
 void WiFi_setup(){
   // Setup WIFI.
   WiFi.begin(ssid, key);
+  WiFi.mode(WIFI_STA);
   // Wait for connection.
   while (WiFi.status() != WL_CONNECTED){
     // Note, the ESP8266 cannot connect while Serial is busy, so we have
@@ -83,7 +92,11 @@ void WiFi_diagnostics(){
 void serverHandler(){
   // Controls the server response to a request.
   Serial.println("Client request handled!");
-  server.send(200, "text/plain", "You are connected.");
+  clients_served++;
+  server.send(200, "text/plain", "Current temperature: " + String(temperature) + char(0xB0) + "C\n"
+              + "Current pressure: " + String(pressure) + "hPa\n"
+              + "Current humidity: " + String(humidity) + "%\n"
+              + "Client #: " + String((clients_served + 1) / 2));
 }
 
 void WiFi_handler(){
@@ -93,6 +106,13 @@ void WiFi_handler(){
   // Start server.
   server.begin();
   Serial.println("Server ready!");
+}
+
+void GPIO_setup(){
+  // Blue LED.
+  pinMode(2, OUTPUT);
+  // Button.
+  pinMode(16, INPUT);
 }
 
 void setup() {
@@ -106,9 +126,31 @@ void setup() {
   WiFi_diagnostics();
   // Start server.
   WiFi_handler();
+  // GPIO configuration.
+  GPIO_setup();
 }
 
 void loop() {
-  server.handleClient();
+  if (sr_var){
+    if (digitalRead(16) == HIGH){
+      server.handleClient();
+      temperature = bme280.readTemperature();
+      pressure = bme280.readPressure() / 100.0F;
+      humidity = bme280.readHumidity();
+    }
+    else{
+      while (digitalRead(16) == LOW);
+      sr_var = 0;
+      digitalWrite(2, LOW);
+    }
+  }
+  else {
+    if (digitalRead(16) == LOW){
+      while (digitalRead(16) == LOW);
+      sr_var = 1;
+      clients_served = 0;
+      digitalWrite(2, HIGH);
+    }
+  }
 }
 
